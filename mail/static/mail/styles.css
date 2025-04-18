@@ -1,24 +1,31 @@
+body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    font-family: 'Roboto', sans-serif;
+    background-color: #f6f8fc;
+    overflow-x: hidden;
+}
+
+
+* {
+    padding: 0px;
+    margin: 0px;
+}
 textarea {
     min-height: 400px;
 }
 
-.mail {
-    border: 2px solid black;
-    border-radius: 5px;
-    padding: 10px;
-    display: flex;
-    justify-content: space-between;
-}
 
 #emails-view {
     flex-direction: column;
-}
-
-.sender {
-    font-weight: bolder;
-    font-size: 19px;
+    padding-top: 20px;
 }
 
 .timestamp {
     color: gray;
 }
+
+.btn {
+    border-radius: 0px;
+}
+

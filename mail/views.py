@@ -99,7 +99,6 @@ def mailbox(request, mailbox):
 @csrf_exempt
 @login_required
 def email(request, email_id):
-
     # Query for requested email
     try:
         email = Email.objects.get(user=request.user, pk=email_id)
@@ -159,6 +158,11 @@ def register(request):
         # Ensure password matches confirmation
         password = request.POST["password"]
         confirmation = request.POST["confirmation"]
+        if not email or not password or not confirmation:
+            return render(request, "mail/register.html", {
+                "message": "Please Fill all the fields!"
+            })
+            
         if password != confirmation:
             return render(request, "mail/register.html", {
                 "message": "Passwords must match."

@@ -1,13 +1,14 @@
+var is_sidebar_open = true;
 document.addEventListener('DOMContentLoaded', function() {
 
   var trigger; //trigger is set to true if mailbox is sent
-
+  
   // Use buttons to toggle between views
   document.querySelector('#inbox').addEventListener('click', () => load_mailbox('inbox'));
   document.querySelector('#sent').addEventListener('click', () => load_mailbox('sent'));
   document.querySelector('#archived').addEventListener('click', () => load_mailbox('archive'));
   document.querySelector('#compose').addEventListener('click', compose_email);
-    
+  document.querySelector('.close-button').addEventListener('click', () => toggle_side_bar())  
   // By default, load the inbox
   load_mailbox('inbox');
   
@@ -16,8 +17,22 @@ document.addEventListener('DOMContentLoaded', function() {
   var mails;
 });
 
-function compose_email() 
-{
+function toggle_side_bar() {
+  var sidebar = document.querySelector(".side-bar");
+  console.log(sidebar);
+  if (is_sidebar_open) {
+    sidebar.style.display = 'none';
+  }
+  else {
+    sidebar.style.display = 'flex';
+  }
+  is_sidebar_open = !is_sidebar_open
+}
+
+function compose_email() {
+  // set the side bar active state
+  activate_sidebar('compose');
+    
   // Show compose view and hide other views
   document.querySelector('#emails-view').style.display = 'none';
   document.querySelector('#compose-view').style.display = 'block';
@@ -28,23 +43,31 @@ function compose_email()
   document.querySelector('#compose-body').value = '';
 }
 
-function load_mailbox(mailbox)
-{
+function activate_sidebar(id) {
+  document.querySelector('#sent').parentElement.classList.remove('active');
+  document.querySelector('#inbox').parentElement.classList.remove('active');
+  document.querySelector('#archived').parentElement.classList.remove('active');
+  document.querySelector('#compose').parentElement.classList.remove('active');
+  document.querySelector(`#${id}`).parentElement.classList.add('active');
+}
+
+function load_mailbox(mailbox) {
   // Show the mailbox and hide other views
   document.querySelector('#emails-view').style.display = 'flex';
   document.querySelector('#compose-view').style.display = 'none';
   
   var html;
   // if the sent button is clicked
-  if (mailbox === 'sent')
-  {
+  if (mailbox === 'sent') {
     trigger = true;
+    // set the side bar active state
+    activate_sidebar('sent');
     //fetching all mails that were sent and creating a response string 
     fetch('/emails/sent')
     .then(response => response.json())
     .then(result => {
         html = result.map(element => {
-        return `<div class="mail mt-2" data-id="${element.id}">
+        return `<div class="mail" data-id="${element.id}">
         <div class="sender" >${element.sender}</div>
         <div class="subject">${element.subject}</div>
         <div class="timestamp">${element.timestamp}</div>
@@ -52,7 +75,7 @@ function load_mailbox(mailbox)
       }).join('');
       //updating the inner HTML of table 
       document.querySelector('#emails-view').innerHTML = 
-      `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>
+      `
       ${html}
       `
       //updating mails array
@@ -67,21 +90,24 @@ function load_mailbox(mailbox)
   else if (mailbox === 'inbox')
   {
     trigger = false;
+    // set the side bar active state
+    activate_sidebar('inbox');
+    
     //fetching all the emails recieved by user and creating a string of html to update the DOM
     fetch('/emails/inbox')
     .then(response => response.json())
     .then(result => {
       html = result.map(element => {
-        return `<div class="mail mt-2" data-id="${element.id}" style="background-color: ${(element.read == true) ? "#DCDCDC" : "white"};">
-                  <div class="sender">${element.sender}</div>
-                  <div class="subject">${element.subject}</div>
-                  <div class="timestamp">${element.timestamp}</div>
+        return `<div class="mail" data-id="${element.id}" style="background-color: ${(element.read == true) ? "#f2f6fc" : "white"}; ${(element.read == false) ? "font-weight: bold;" : ""}">
+                  <div class="sender col-2">${element.sender}</div>
+                  <div class="subject col-8">${element.subject} - ${element.body} </div>
+                  <div class="timestamp col-2">${element.timestamp}</div>
                 </div>`
       }).join('');
 
       //updating the inner HTML of table 
       document.querySelector('#emails-view').innerHTML = 
-      `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>
+      `
       ${html}
       `;
       
@@ -96,12 +122,15 @@ function load_mailbox(mailbox)
   else if (mailbox === 'archive')
   {
     trigger = false;
+    // set the side bar active state
+    activate_sidebar('archived');
+    
     //fetching archived mails and creating a list for updating the DOM
     fetch('/emails/archive')
     .then(response => response.json())
     .then(result => {
       html = result.map(element => {
-        return `<div class="mail mt-2" data-id="${element.id}" style="background-color: ${(element.read == true) ? "#DCDCDC" : "white"};">
+        return `<div class="mail" data-id="${element.id}" style="background-color: ${(element.read == true) ? "#f2f6fc" : "white"};">
         <div class="sender">${element.sender}</div>
         <div class="subject">${element.subject}</div>
         <div class="timestamp">${element.timestamp}</div>
@@ -109,7 +138,7 @@ function load_mailbox(mailbox)
       }).join('');
       //updating the inner HTML of table 
       document.querySelector('#emails-view').innerHTML = 
-      `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>
+      `
       ${html}
       `
       
@@ -133,7 +162,7 @@ function send_mail(e)
   const recipients = this.querySelector("#compose-recipients").value;
   const subject = this.querySelector("#compose-subject").value;
   const body = this.querySelector("#compose-body").value;
-
+  console.log(`RECEIPIENT: ${recipients}\nSUBJECT: ${subject}\nBODY: ${body}`);
   //sending mail through post request
   fetch('/emails', {
     method: 'POST',
@@ -145,6 +174,7 @@ function send_mail(e)
   })
   .then(response => response.json())
   .then(result => {
+      console.log(result.message)
       //Returning a message
       document.querySelector("#message").innerHTML = 
       `<div class="alert alert-primary alert-dismissible fade show" role="alert">
